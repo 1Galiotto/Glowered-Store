@@ -34,7 +34,7 @@
       const prevFromStorage = sessionStorage.getItem('prev');
 
       // 3) document.referrer seguro (mesma origem)
-      const ref = document.referrer;
+    const ref = document.referrer
       let refSameOrigin = null;
       try {
         if (ref) {

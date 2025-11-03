@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="shortcut icon" href="./img/logoNoBackground.png" type="image/x-icon">
+    <title>Glowered Store</title>
+</head>
+
+<body>
+    <header>
+        <div id="imgTitle">
+            <img src="./img/logoNoBackground.png" alt="pagina de login">
+            <h1><span style="color: #8AED14;">Glowered</span> <span style="color: #7D20FF;">Store</span></h1>
+        </div>
+        <input type="text" name="query" placeholder="Pesquisar...">
+        <button type="submit" id="btnSearch">Buscar</button>
+        <form action="/search" method="get">
+            <div id="accountSection">
+                <button id="accountButton">Conta</button>
+                <div id="accountPanel" style="display: none;">
+                    <a href="/login">Login</a>
+                    <a href="/register">Registrar-se</a>
+                </div>
+            </div>
+        </form>
+        <div id="account">
+
+        </div>
+    </header>
+    <main>
+
+    </main>
+    <footer>
+        <p>&copy; Glowered Store</p>
+    </footer>
+    <script>
+        const accountButton = document.getElementById('accountButton');
+        const accountPanel = document.getElementById('accountPanel');
+
+        accountButton.addEventListener('click', () => {
+            accountPanel.style.display = accountPanel.style.display === 'none' ? 'block' : 'none';
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nosifer&display=swap');
+:root {
+  --bg-1: #07060a;
+  --bg-2: #0f0d14;
+  --panel: rgba(10, 10, 12, 0.75);
+  --accent1: #ff2d95;
+  /* magenta */
+  --accent2: #00e6a8;
+  /* teal */
+  --muted: #a8a1a8;
+  --glass: rgba(255, 255, 255, 0.03);
+  --radius: 12px;
+}
+
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Orbitron', sans-serif;
+  background: var(--bg-1);
+  color: white;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-2);
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 6px var(--glass);
+}
+
+header img {
+  height: 50px;
+  filter:contrast(1.05) saturate(1.2);
+  mix-blend-mode:screen;
+  transform: translateY(0);
+  will-change:transform, filter;
+  display: flex;
+  transition: transform .45s ease, filter .45s ease;
+}
+
+header img:hover{
+  transform: translateY(-6px) rotate(-5deg);
+  filter: brightness(1.18) saturate(1.25);
+}
+
+header form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+header input[type="text"] {
+  padding: 0.5rem;
+  border: 1px solid var(--muted);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: white;
+}
+
+header input[type="text"]::placeholder {
+  color: var(--muted);
+}
+
+header button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent1);
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+header button:hover {
+  background: var(--accent2);
+}
+
+#accountButton {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent2);
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;   
+} 
+
+/* Main */
+main {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-1);
+}
+
+/* Footer */
+footer {
+  background: var(--bg-2);
+  text-align: center;
+  padding: 1rem;
+  color: var(--muted);
+}
+
+h1 {
+  font-family: 'Nosifer', cursive;
+  font-size: 1.5rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.imgTitle {
+  flex-direction: row;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1.5rem;
+  color: var(--accent1);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  width: 500px;
+}

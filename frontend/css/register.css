@@ -74,7 +74,6 @@ header img{
   transform: translateY(0);
   will-change:transform, filter;
   transition: transform .45s ease, filter .45s ease;
-  box-shadow: 0 18px 60px rgba(0,0,0,0.6), 0 0 24px rgba(255,45,149,0.06), inset 0 -6px 24px rgba(0,0,0,0.55);
   border-radius:8px;
   margin-left: -25px;
   margin-bottom: 3rem;
