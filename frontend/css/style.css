@@ -214,6 +214,8 @@ main {
   margin-bottom: 3rem;
   border: 1px solid var(--glass);
   box-shadow: #8AED14 0 0 20px;
+  position: relative;
+  overflow: hidden;
 }
 
 .hero h2 {
@@ -224,6 +226,21 @@ main {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 0 30px rgba(125, 32, 255, 0.5);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 70%, rgba(125, 32, 255, 0.1), transparent 50%);
+  pointer-events: none;
+}
+
+.hero h2 {
+  
 }
 
 .hero p {
