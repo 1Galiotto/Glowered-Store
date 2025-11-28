@@ -1,36 +1,143 @@
-const Carrinho = require('./Carrinho')
-const Usuario = require('./Usuario')
-const Produto = require('./Produto')
-const Pedido = require('./Pedido')
-const Entrega = require('./Entrega')
-const Pagamento = require('./Pagamento')
-const Estoque = require('./Estoque')
-const Config = require('./Config')
-const Cupom = require('./Cupom')
+// models/rel.js - VERSÃO CORRIGIDA
+const Carrinho = require('./Carrinho');
+const Usuario = require('./Usuario');
+const Produto = require('./Produto');
+const Pedido = require('./Pedido');
+const Entrega = require('./Entrega');
+const Pagamento = require('./Pagamento');
+const Estoque = require('./Estoque');
+const Config = require('./Config');
+const Cupom = require('./Cupom');
 
-// Relações entre Usuario e Carrinho
-Usuario.hasOne(Carrinho, { foreignKey: 'usuarioId', onDelete: 'CASCADE' })
-Carrinho.belongsTo(Usuario, { foreignKey: 'usuarioId' })
+// 🔥 ASSOCIAÇÕES CORRIGIDAS - USANDO NOMES CONSISTENTES
 
-// Relações entre Usuario e Pedido
-Usuario.hasMany(Pedido, { foreignKey: 'usuarioId', onDelete: 'CASCADE' })
-Pedido.belongsTo(Usuario, { foreignKey: 'usuarioId' })
+// Produto <-> Estoque - CORRIGIDO
+Produto.hasMany(Estoque, {
+    foreignKey: 'idProduto',
+    sourceKey: 'codProduto', // ← CORRETO
+    onDelete: 'CASCADE',
+    as: 'estoques'
+});
 
-// Relações entre Pedido e Entrega
-Pedido.hasOne(Entrega, { foreignKey: 'pedidoId', onDelete: 'CASCADE' })
-Entrega.belongsTo(Pedido, { foreignKey: 'pedidoId' })
+Estoque.belongsTo(Produto, {
+    foreignKey: 'idProduto',
+    targetKey: 'codProduto', // ← CORRETO
+    as: 'produto'
+});
 
-// Relações entre Pedido e Pagamento
-Pedido.hasOne(Pagamento, { foreignKey: 'pedidoId', onDelete: 'CASCADE' })
-Pagamento.belongsTo(Pedido, { foreignKey: 'pedidoId' })
+// Usuario <-> Carrinho - CORRIGIDO
+Usuario.hasMany(Carrinho, {
+    foreignKey: 'idUsuario',
+    sourceKey: 'codUsuario', // ← ADICIONE sourceKey
+    onDelete: 'CASCADE',
+    as: 'carrinhos'
+});
 
-// Relações entre Produto e Estoque
-Produto.hasOne(Estoque, { foreignKey: 'produtoId', onDelete: 'CASCADE' })
-Estoque.belongsTo(Produto, { foreignKey: 'produtoId' })
+Carrinho.belongsTo(Usuario, {
+    foreignKey: 'idUsuario',
+    targetKey: 'codUsuario', // ← ADICIONE targetKey
+    as: 'usuario'
+});
 
-// Relações entre Usuario e Cupom
-Usuario.hasMany(Cupom, { foreignKey: 'usuarioId', onDelete: 'CASCADE' })
-Cupom.belongsTo(Usuario, { foreignKey: 'usuarioId' })
+// Produto <-> Carrinho - CORRIGIDO
+Produto.hasMany(Carrinho, {
+    foreignKey: 'idProduto',
+    sourceKey: 'codProduto', // ← CORRETO
+    onDelete: 'CASCADE',
+    as: 'carrinhos'
+});
+
+Carrinho.belongsTo(Produto, {
+    foreignKey: 'idProduto',
+    targetKey: 'codProduto', // ← CORRETO
+    as: 'produto'
+});
+
+// Usuario <-> Pedido - CORRIGIDO
+Usuario.hasMany(Pedido, {
+    foreignKey: 'idUsuario',
+    sourceKey: 'codUsuario', // ← ADICIONE sourceKey
+    onDelete: 'CASCADE',
+    as: 'pedidos'
+});
+
+Pedido.belongsTo(Usuario, {
+    foreignKey: 'idUsuario',
+    targetKey: 'codUsuario', // ← ADICIONE targetKey
+    as: 'usuario'
+});
+
+// Pedido <-> Entrega - CORRIGIDO (ATENÇÃO AQUI!)
+Pedido.hasOne(Entrega, {
+    foreignKey: 'idPedido',
+    sourceKey: 'codPedido', // ← MUDEI PARA codPedido (primary key real)
+    onDelete: 'CASCADE',
+    as: 'entrega'
+});
+
+Entrega.belongsTo(Pedido, {
+    foreignKey: 'idPedido',
+    targetKey: 'codPedido', // ← MUDEI PARA codPedido (primary key real)
+    as: 'pedido'
+});
+
+// Pedido <-> Pagamento - CORRIGIDO
+Pedido.hasOne(Pagamento, {
+    foreignKey: 'idPedido',
+    sourceKey: 'codPedido', // ← MUDEI PARA codPedido
+    onDelete: 'CASCADE',
+    as: 'pagamento'
+});
+
+Pagamento.belongsTo(Pedido, {
+    foreignKey: 'idPedido',
+    targetKey: 'codPedido', // ← MUDEI PARA codPedido
+    as: 'pedido'
+});
+
+// Usuario <-> Config - CORRIGIDO
+Usuario.hasOne(Config, {
+    foreignKey: 'codUsuario',
+    sourceKey: 'codUsuario', // ← ADICIONE sourceKey
+    onDelete: 'CASCADE',
+    as: 'config'
+});
+
+Config.belongsTo(Usuario, {
+    foreignKey: 'codUsuario',
+    targetKey: 'codUsuario', // ← ADICIONE targetKey
+    as: 'usuario'
+});
+
+// Cupom <-> Pedido - CORRIGIDO
+Cupom.hasMany(Pedido, {
+    foreignKey: 'idCupom',
+    sourceKey: 'codCupom', // ← MUDEI PARA codCupom (assumindo que é a PK)
+    onDelete: 'SET NULL',
+    as: 'pedidos'
+});
+
+Pedido.belongsTo(Cupom, {
+    foreignKey: 'idCupom',
+    targetKey: 'codCupom', // ← MUDEI PARA codCupom (assumindo que é a PK)
+    as: 'cupom'
+});
+
+// Usuario <-> Cupom - CORRIGIDO
+Usuario.hasMany(Cupom, {
+    foreignKey: 'idUsuario',
+    sourceKey: 'codUsuario', // ← ADICIONE sourceKey
+    onDelete: 'CASCADE',
+    as: 'cupons'
+});
+
+Cupom.belongsTo(Usuario, {
+    foreignKey: 'idUsuario',
+    targetKey: 'codUsuario', // ← ADICIONE targetKey
+    as: 'usuario'
+});
+
+console.log('✅ Associações configuradas e corrigidas!');
 
 module.exports = {
     Carrinho,
@@ -42,4 +149,4 @@ module.exports = {
     Estoque,
     Config,
     Cupom
-}
+};

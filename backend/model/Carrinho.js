@@ -1,3 +1,4 @@
+// Crie o arquivo ./models/Carrinho.js
 const { DataTypes } = require('sequelize')
 const db = require('../db/conn')
 
@@ -37,4 +38,5 @@ const Carrinho = db.define('carrinho', {
     tableName: 'carrinhos',
     timestamps: false
 })
+
 module.exports = Carrinho

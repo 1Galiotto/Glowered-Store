@@ -14,13 +14,27 @@ const cadastrar = async (req,res)=>{
         const usuario = await Usuario.create({
             nome: valores.nome,
             email: valores.email,
-            senha: senhaHash
+            senha: senhaHash,
+            cpf: valores.cpf || null,
+            telefone: valores.telefone || null,
+            tipo: valores.tipo || 'cliente'
         })
-        res.status(201).json({message: 'usuario cadastrado com sucesso!'})
-        console.log(usuario)
+        
+        res.status(201).json({
+            message: 'Usuário cadastrado com sucesso!',
+            user: {
+                codUsuario: usuario.codUsuario,
+                nome: usuario.nome,
+                email: usuario.email
+            }
+        })
+        
     }catch(err){
-        res.status(500).json({error: "Erro ao cadastrar o usuario"})
-        console.error("Erro ao cadastrar o usuario",err)
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({error: "Email já cadastrado!"})
+        }
+        res.status(500).json({error: "Erro ao cadastrar o usuário"})
+        console.error("Erro ao cadastrar o usuário",err)
     }
 }
 
@@ -31,6 +45,64 @@ const listar = async (req,res)=>{
     }catch(err){
         res.status(500).json({error: "Erro ao listar os usuario"})
         console.error("Erro ao listar os usuario",err)
+    }
+}
+
+// ✅ NOVA FUNÇÃO: Buscar usuário por ID
+const buscarPorId = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const usuario = await Usuario.findByPk(id);
+        if (!usuario) {
+            return res.status(404).json({ error: "Usuário não encontrado!" });
+        }
+        
+        // Não retornar a senha por segurança
+        const { senha, ...usuarioSemSenha } = usuario.toJSON();
+        res.status(200).json(usuarioSemSenha);
+        
+    } catch (err) {
+        res.status(500).json({ error: "Erro ao buscar usuário" });
+        console.error("Erro ao buscar usuário", err);
+    }
+}
+
+// ✅ NOVA FUNÇÃO: Atualizar usuário
+const atualizar = async (req, res) => {
+    const id = req.params.id;
+    const valores = req.body;
+    
+    try {
+        const usuario = await Usuario.findByPk(id);
+        if (!usuario) {
+            return res.status(404).json({ error: "Usuário não encontrado!" });
+        }
+
+        // Campos que podem ser atualizados
+        const camposPermitidos = ['nome', 'email', 'telefone'];
+        const dadosAtualizacao = {};
+        
+        camposPermitidos.forEach(campo => {
+            if (valores[campo] !== undefined) {
+                dadosAtualizacao[campo] = valores[campo];
+            }
+        });
+
+        await usuario.update(dadosAtualizacao);
+        
+        // Retornar usuário atualizado (sem senha)
+        const { senha, ...usuarioAtualizado } = usuario.toJSON();
+        res.status(200).json({ 
+            message: "Usuário atualizado com sucesso!", 
+            user: usuarioAtualizado 
+        });
+        
+    } catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({ error: "Email já está em uso!" });
+        }
+        res.status(500).json({ error: "Erro ao atualizar usuário" });
+        console.error("Erro ao atualizar usuário", err);
     }
 }
 
@@ -48,4 +120,11 @@ const apagar = async (req,res)=>{
     }   
 }
 
-module.exports = { cadastrar, listar, apagar }
+// ✅ ATUALIZAR O EXPORT
+module.exports = { 
+    cadastrar, 
+    listar, 
+    buscarPorId,  
+    atualizar,    
+    apagar 
+}

@@ -539,6 +539,54 @@ const aplicarCupom = async (req, res) => {
     }
 }
 
+// Obter estatísticas gerais para dashboard
+const obterEstatisticasGeral = async (req, res) => {
+    try {
+        const todosPedidos = await Pedido.findAll();
+        const todosClientes = await Usuario.findAll({ where: { tipo: 'cliente' } });
+        
+        // Estatísticas básicas
+        const estatisticas = {
+            totalPedidos: todosPedidos.length,
+            totalVendas: todosPedidos.reduce((total, pedido) => total + (pedido.valorTotal || 0), 0),
+            totalClientes: todosClientes.length,
+            pendentes: todosPedidos.filter(p => p.status === 'Pendente').length,
+            processamento: todosPedidos.filter(p => p.status === 'Processando').length,
+            enviados: todosPedidos.filter(p => p.status === 'Enviado').length,
+            entregues: todosPedidos.filter(p => p.status === 'Entregue').length
+        };
+
+        res.json(estatisticas);
+    } catch (error) {
+        console.error('Erro ao obter estatísticas gerais:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+};
+
+// Buscar por período simplificado para dashboard
+const buscarPorPeriodoDashboard = async (req, res) => {
+    try {
+        const { dias = 30 } = req.query; // Padrão: últimos 30 dias
+        
+        const dataInicio = new Date();
+        dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+        
+        const pedidos = await Pedido.findAll({
+            where: {
+                dataPedido: {
+                    [Op.between]: [dataInicio, new Date()]
+                }
+            },
+            order: [['dataPedido', 'DESC']]
+        });
+
+        res.json(pedidos);
+    } catch (error) {
+        console.error('Erro ao buscar pedidos por período:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+};
+
 module.exports = {
     criarPedido,
     listarPedidos,
@@ -550,5 +598,7 @@ module.exports = {
     buscarPorStatus,
     buscarPorPeriodo,
     obterEstatisticas,
-    aplicarCupom
-}
+    aplicarCupom,
+    obterEstatisticasGeral,        // 🔥 NOVA FUNÇÃO
+    buscarPorPeriodoDashboard      // 🔥 NOVA FUNÇÃO
+};

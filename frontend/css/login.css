@@ -126,7 +126,7 @@ form label{
 }
 
 /* Inputs estilo "neon dark" */
-input[type="text"], input[type="password"]{
+input[type="text"], input[type="password"], input[type="email"]{
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border:1px solid rgba(255,255,255,0.04);
   padding:.75rem 1rem;

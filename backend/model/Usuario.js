@@ -30,7 +30,7 @@ const Usuario = db.define('usuario', {
         unique: true
     },
     tipo: {
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM('admin', 'cliente'),
         allowNull: false,
         defaultValue: 'cliente'
     },

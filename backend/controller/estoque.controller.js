@@ -200,46 +200,42 @@ const listarTodosEstoques = async (req, res) => {
 
 // Listar produtos com estoque baixo
 const listarEstoqueBaixo = async (req, res) => {
-    const limite = req.query.limite || 10 // Limite padrão de 10 unidades
-
     try {
-        const produtos = await Produto.findAll({
-            where: { ativo: true },
+        const LIMITE_ESTOQUE_BAIXO = 10; // Defina seu limite aqui
+        
+        // Buscar todos os produtos com estoque
+        const produtosComEstoque = await Produto.findAll({
             include: [{
                 model: Estoque,
-                attributes: []
+                required: false
             }]
-        })
+        });
 
-        const produtosComEstoqueBaixo = await Promise.all(
-            produtos.map(async (produto) => {
-                const quantidadeAtual = await getQuantidadeAtual(produto.codProduto)
+        // Calcular estoque total por produto
+        const estoquePorProduto = await Promise.all(
+            produtosComEstoque.map(async (produto) => {
+                const estoqueTotal = await Estoque.sum('quantidade', {
+                    where: { idProduto: produto.codProduto }
+                }) || 0;
+
                 return {
                     produto: produto,
-                    quantidadeEstoque: quantidadeAtual
-                }
+                    quantidade: estoqueTotal
+                };
             })
-        )
+        );
 
-        // Filtrar produtos com estoque abaixo do limite
-        const estoqueBaixo = produtosComEstoqueBaixo.filter(item => 
-            item.quantidadeEstoque <= limite && item.quantidadeEstoque > 0
-        )
+        // Filtrar estoque baixo
+        const estoqueBaixo = estoquePorProduto.filter(item => 
+            item.quantidade <= LIMITE_ESTOQUE_BAIXO && item.quantidade > 0
+        );
 
-        const semEstoque = produtosComEstoqueBaixo.filter(item => 
-            item.quantidadeEstoque <= 0
-        )
-
-        res.status(200).json({
-            estoqueBaixo: estoqueBaixo,
-            semEstoque: semEstoque,
-            limite: parseInt(limite)
-        })
-    } catch (err) {
-        res.status(500).json({ error: "Erro ao listar estoque baixo" })
-        console.error("Erro ao listar estoque baixo", err)
+        res.json(estoqueBaixo);
+    } catch (error) {
+        console.error('Erro ao listar estoque baixo:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
     }
-}
+};
 
 // Ajustar estoque (correção)
 const ajustarEstoque = async (req, res) => {
@@ -292,12 +288,23 @@ const ajustarEstoque = async (req, res) => {
 }
 
 // Função auxiliar para calcular quantidade atual
-const getQuantidadeAtual = async (idProduto) => {
-    const resultado = await Estoque.sum('quantidade', {
-        where: { idProduto: idProduto }
-    })
-    return resultado || 0
-}
+const getQuantidadeAtual = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const quantidade = await Estoque.sum('quantidade', {
+            where: { idProduto: id }
+        }) || 0;
+
+        res.json({ 
+            idProduto: parseInt(id),
+            quantidade: quantidade 
+        });
+    } catch (error) {
+        console.error('Erro ao obter quantidade:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+};
 
 // Buscar movimentações por período
 const buscarPorPeriodo = async (req, res) => {
@@ -333,6 +340,7 @@ const buscarPorPeriodo = async (req, res) => {
         console.error("Erro ao buscar movimentações por período", err)
     }
 }
+
 
 module.exports = {
     adicionarEstoque, //
