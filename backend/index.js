@@ -21,7 +21,6 @@ const entregaController = require('./controller/entrega.controller.js')
 
 // ------------------------- CONFIG SERVIDOR -------------------------
 const PORT = process.env.PORTC || 3000
-const HOST = process.env.HOST || 'localhost'
 const isProduction = process.env.NODE_ENV === 'production'
 // ------------------------------------------------------------------
 
@@ -155,8 +154,8 @@ async function startServer() {
             console.log('Banco autenticado (produção)')
         }
 
-        app.listen(PORT, HOST, () => {
-            console.log(`Servidor rodando em http://${HOST}:${PORT}`)
+        app.listen(PORT, () => {
+            console.log(`Servidor rodando em ${PORT}`)
         })
 
     } catch (err) {
