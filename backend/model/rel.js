@@ -8,6 +8,8 @@ const Pagamento = require('./Pagamento');
 const Estoque = require('./Estoque');
 const Config = require('./Config');
 const Cupom = require('./Cupom');
+const Endereco = require('./Endereco');
+const Favorito = require('./Favorito');
 
 // 🔥 ASSOCIAÇÕES CORRIGIDAS - USANDO NOMES CONSISTENTES
 
@@ -137,6 +139,47 @@ Cupom.belongsTo(Usuario, {
     as: 'usuario'
 });
 
+Usuario.hasMany(Endereco, {
+    foreignKey: 'idUsuario',
+    sourceKey: 'codUsuario',
+    onDelete: 'CASCADE',
+    as: 'enderecos'
+});
+
+Endereco.belongsTo(Usuario, {
+    foreignKey: 'idUsuario',
+    targetKey: 'codUsuario',
+    as: 'usuario'
+});
+
+// Usuario <-> Favorito - CORRIGIDO
+Usuario.hasMany(Favorito, {
+    foreignKey: 'idUsuario',
+    sourceKey: 'codUsuario',
+    onDelete: 'CASCADE',
+    as: 'favoritos'
+});
+
+Favorito.belongsTo(Usuario, {
+    foreignKey: 'idUsuario',
+    targetKey: 'codUsuario',
+    as: 'usuario'
+});
+
+// Produto <-> Favorito - CORRIGIDO
+Produto.hasMany(Favorito, {
+    foreignKey: 'idProduto',
+    sourceKey: 'codProduto',
+    onDelete: 'CASCADE',
+    as: 'favoritos'
+});
+
+Favorito.belongsTo(Produto, {
+    foreignKey: 'idProduto',
+    targetKey: 'codProduto',
+    as: 'produto'
+});
+
 console.log('✅ Associações configuradas e corrigidas!');
 
 module.exports = {
@@ -148,5 +191,7 @@ module.exports = {
     Pagamento,
     Estoque,
     Config,
-    Cupom
+    Cupom,
+    Endereco,
+    Favorito
 };

@@ -21,7 +21,7 @@ const Produto = db.define('produto', {
         allowNull: false
     },
     descricao: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(1000),
         allowNull: false
     },
     preco: {

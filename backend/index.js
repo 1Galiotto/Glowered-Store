@@ -18,6 +18,8 @@ const pedidoController = require('./controller/pedidos.controller.js')
 const carrinhoController = require('./controller/carrinho.controller.js')
 const cupomController = require('./controller/cupom.controller.js')
 const entregaController = require('./controller/entrega.controller.js')
+const enderecoController = require('./controller/endereco.controller.js')
+const favoritoController = require('./controller/favorito.controller.js')
 
 // ------------------------- CONFIG SERVIDOR -------------------------
 const PORT = process.env.PORTC || 3000
@@ -35,6 +37,15 @@ app.use(cors())
 // -------------------------- ROTAS PÚBLICAS -------------------------
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'API Rodando!' })
+})
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    })
 })
 
 // Rotas de autenticação
@@ -138,6 +149,20 @@ app.delete('/entregas/:id', entregaController.deletar)
 app.get('/entregas/pedido/:idPedido', entregaController.buscarPorPedido)
 app.get('/entregas/rastreamento/:codigo', entregaController.buscarPorRastreamento)
 app.put('/entregas/:id/status', entregaController.atualizarStatus)
+
+// Rotas de Endereços
+app.post('/enderecos', enderecoController.criar)
+app.get('/enderecos/usuario/:idUsuario', enderecoController.listarPorUsuario)
+app.get('/enderecos/:id', enderecoController.buscarPorId)
+app.put('/enderecos/:id', enderecoController.atualizar)
+app.delete('/enderecos/:id', enderecoController.deletar)
+
+// Rotas de Favoritos
+app.post('/favoritos', favoritoController.adicionar)
+app.get('/favoritos/:idUsuario', favoritoController.listarPorUsuario)
+app.delete('/favoritos/:idUsuario/:idProduto', favoritoController.remover)
+app.get('/favoritos/verificar/:idUsuario/:idProduto', favoritoController.verificarFavorito)
+app.get('/favoritos/contar/:idUsuario', favoritoController.contarPorUsuario)
 // ------------------------------------------------------------------
 
 

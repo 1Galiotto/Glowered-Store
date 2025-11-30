@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/register.css">
-    <link rel="shortcut icon" href="../img/logoNoBackground.png" type="image/x-icon">
-    <script src="../js/fallbackButton.js" defer></script>
+    <link rel="shortcut icon" href="https://i.ibb.co/Kcjh5G8b/logo-No-Background.png" type="image/x-icon">
+    <script src="../js/cpf.js"></script>
     <title>Glowered Store - Cadastro</title>
 </head>
 
@@ -68,6 +68,12 @@
                 // Validações básicas
                 if (!userData.nome || !userData.cpf || !userData.email || !userData.senha) {
                     showError('Por favor, preencha todos os campos obrigatórios.');
+                    return;
+                }
+
+                // Validar CPF
+                if (!validarCPF(userData.cpf)) {
+                    showError('Por favor, insira um CPF válido.');
                     return;
                 }
 

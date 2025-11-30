@@ -6,8 +6,17 @@ const adicionarItem = async (req, res) => {
     try {
         const { idUsuario, idProduto, quantidade } = req.body;
 
+        // Parse IDs para inteiros
+        const idUsuarioInt = parseInt(idUsuario);
+        const idProdutoInt = parseInt(idProduto);
+        const quantidadeInt = parseInt(quantidade) || 1;
+
+        if (isNaN(idUsuarioInt) || isNaN(idProdutoInt)) {
+            return res.status(400).json({ error: 'IDs inválidos' });
+        }
+
         // Verificar se o produto existe - USANDO codProduto
-        const produto = await Produto.findByPk(idProduto);
+        const produto = await Produto.findByPk(idProdutoInt);
         if (!produto) {
             return res.status(404).json({ error: 'Produto não encontrado' });
         }
@@ -20,14 +29,14 @@ const adicionarItem = async (req, res) => {
         // Verificar se o item já existe no carrinho do usuário
         const itemExistente = await Carrinho.findOne({
             where: {
-                idUsuario,
-                idProduto
+                idUsuario: idUsuarioInt,
+                idProduto: idProdutoInt
             }
         });
 
         if (itemExistente) {
             // Atualizar quantidade se o item já existir
-            itemExistente.quantidade += parseInt(quantidade) || 1;
+            itemExistente.quantidade += quantidadeInt;
             await itemExistente.save();
 
             return res.status(200).json({
@@ -38,9 +47,9 @@ const adicionarItem = async (req, res) => {
 
         // Criar novo item no carrinho
         const novoItem = await Carrinho.create({
-            idUsuario,
-            idProduto,
-            quantidade: parseInt(quantidade) || 1
+            idUsuario: idUsuarioInt,
+            idProduto: idProdutoInt,
+            quantidade: quantidadeInt
         });
 
         res.status(201).json({

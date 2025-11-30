@@ -59,7 +59,21 @@ async function carregarCarrinho() {
 
     } catch (err) {
         console.error('❌ Erro na API, usando modo demo:', err);
-        // ... resto do código de fallback
+        // Tenta carregar dados de demonstração
+        try {
+            const dadosDemo = getDadosDemonstracao();
+            if (dadosDemo.length > 0) {
+                itensCarrinho = dadosDemo;
+                if (carrinhoVazio) carrinhoVazio.style.display = 'none';
+                exibirItensCarrinho(itensCarrinho);
+                atualizarResumo();
+            } else {
+                mostrarCarrinhoVazio();
+            }
+        } catch (demoError) {
+            console.error('Erro no modo demo:', demoError);
+            mostrarCarrinhoVazio();
+        }
     } finally {
         if (loading) loading.style.display = 'none';
     }
@@ -70,7 +84,7 @@ async function adicionarAoCarrinho(idProduto) {
         const usuario = verificarLogin();
         if (!usuario) {
             alert('⚠️ Faça login para adicionar produtos ao carrinho');
-            window.location.href = './login.html';
+            window.location.href = './html/login.html';
             return;
         }
 
@@ -113,9 +127,7 @@ async function adicionarAoCarrinho(idProduto) {
     }
 }
 
-function isCarrinhoPage() {
-    return window.location.pathname.includes('carrinho.html');
-}
+
 
 async function atualizarContadorCarrinho() {
     try {
@@ -143,7 +155,7 @@ function irParaPedidos() {
     fecharCheckout();
     
     // Verifica se a página de pedidos existe, senão vai para a loja
-    const pedidosUrl = './pedidos.html'; // ou '../html/pedidos.html' dependendo da sua estrutura
+    const pedidosUrl = './pedidos.html';
     
     // Tenta redirecionar para pedidos, se não existir vai para home
     fetch(pedidosUrl)
@@ -159,21 +171,26 @@ function irParaPedidos() {
         });
 }
 
-// Atualize a função finalizarProcesso também
 function finalizarProcesso() {
     fecharCheckout();
     window.location.href = '../index.html';
 }
+
 function mostrarCarrinhoVazio() {
     const carrinhoVazio = document.getElementById('carrinho-vazio');
     const listaItens = document.getElementById('lista-itens');
     const btnFinalizar = document.getElementById('btn-finalizar');
-    
+
     if (carrinhoVazio) carrinhoVazio.style.display = 'block';
     if (listaItens) listaItens.innerHTML = '';
     if (btnFinalizar) btnFinalizar.disabled = true;
-    
+
     atualizarResumo();
+}
+
+// Verificar se estamos na página do carrinho
+function isCarrinhoPage() {
+    return document.getElementById('carrinho-vazio') !== null;
 }
 
 // Dados de demonstração (apenas se API falhar)
@@ -206,13 +223,6 @@ function getDadosDemonstracao() {
             }
         }
     ];
-}
-
-function mostrarCarrinhoVazio() {
-    document.getElementById('carrinho-vazio').style.display = 'block';
-    document.getElementById('lista-itens').innerHTML = '';
-    document.getElementById('btn-finalizar').disabled = true;
-    atualizarResumo();
 }
 
 // Exibir itens do carrinho
@@ -438,10 +448,30 @@ async function aplicarCupom() {
 }
 
 // Iniciar checkout
-function iniciarCheckout() {
+async function iniciarCheckout() {
     if (itensCarrinho.length === 0) {
         alert('Adicione produtos ao carrinho antes de finalizar a compra');
         return;
+    }
+
+    // Verificar se usuário tem endereços cadastrados
+    const usuario = verificarLogin();
+    if (!usuario) {
+        alert('Faça login para continuar');
+        window.location.href = './html/login.html';
+        return;
+    }
+
+    try {
+        const enderecos = await verificarEnderecosUsuario(usuario.codUsuario);
+        if (!enderecos || enderecos.length === 0) {
+            // Usuário não tem endereços - mostrar modal para adicionar
+            mostrarModalAdicionarEndereco();
+            return;
+        }
+    } catch (error) {
+        console.error('Erro ao verificar endereços:', error);
+        // Em caso de erro, continua com checkout (fallback)
     }
 
     document.getElementById('checkout-modal').style.display = 'flex';
@@ -544,77 +574,77 @@ function carregarPassoCheckout(passo) {
         case 3:
             const numeroPedido = `GLW${Date.now().toString().slice(-6)}`;
             checkoutContent.innerHTML = `
-        <div class="checkout-success">
-            <img src="https://img.icons8.com/fluency/96/checked.png" alt="Sucesso">
-            <h4>PEDIDO CONFIRMADO! 🎉</h4>
-            <p>Seu pedido foi processado com sucesso e já está sendo preparado.</p>
-            <div style="background: var(--bg-2); padding: 1rem; border-radius: var(--radius); margin: 1rem 0;">
-                <p style="color: var(--accent2); font-family: 'Share Tech Mono', monospace; margin: 0;">
-                    Nº do Pedido: ${numeroPedido}<br>
-                    Total: R$ ${totalPedido.toFixed(2)}<br>
-                    Previsão de entrega: 5 dias úteis
-                </p>
-            </div>
-            <div style="display: flex; gap: 1rem; flex-direction: column;">
-                <button class="btn btn-primary" onclick="irParaPedidos()">
-                    📦 VER MEUS PEDIDOS
-                </button>
-                <button class="btn btn-secondary" onclick="finalizarProcesso()">
-                    🏠 VOLTAR À LOJA
-                </button>
-            </div>
-        </div>
-    `;
+                <div class="checkout-success">
+                    <img src="https://img.icons8.com/fluency/96/checked.png" alt="Sucesso">
+                    <h4>PEDIDO CONFIRMADO! 🎉</h4>
+                    <p>Seu pedido foi processado com sucesso e já está sendo preparado.</p>
+                    <div style="background: var(--bg-2); padding: 1rem; border-radius: var(--radius); margin: 1rem 0;">
+                        <p style="color: var(--accent2); font-family: 'Share Tech Mono', monospace; margin: 0;">
+                            Nº do Pedido: ${numeroPedido}<br>
+                            Total: R$ ${totalPedido.toFixed(2)}<br>
+                            Previsão de entrega: 5 dias úteis
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 1rem; flex-direction: column;">
+                        <button class="btn btn-primary" onclick="irParaPedidos()">
+                            📦 VER MEUS PEDIDOS
+                        </button>
+                        <button class="btn btn-secondary" onclick="finalizarProcesso()">
+                            🏠 VOLTAR À LOJA
+                        </button>
+                    </div>
+                </div>
+            `;
             break;
     }
 }
 
-async function limparCarrinhoAposPedido(idUsuario) {
-    try {
-        console.log('🔄 Limpando carrinho após pedido...');
-
-        // Tenta limpar no backend
-        const response = await fetch(`${API_BASE}/carrinho/limpar/${idUsuario}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-
-        if (response.ok) {
-            console.log('✅ Carrinho limpo no backend');
-        } else {
-            console.log('⚠️ Erro ao limpar carrinho no backend, limpando localmente');
-        }
-
-        // Sempre limpa localmente
-        await limparCarrinhoLocal();
-
-    } catch (err) {
-        console.error('❌ Erro ao limpar carrinho:', err);
-        await limparCarrinhoLocal();
-    }
+// Função para limpar carrinho localmente
+async function limparCarrinhoLocal() {
+    console.log('🔄 Limpando carrinho localmente...');
+    
+    // Limpa a variável global
+    itensCarrinho = [];
+    
+    // Atualiza a interface
+    mostrarCarrinhoVazio();
+    
+    // Limpa qualquer cupom aplicado
+    cupomAplicado = null;
+    
+    // Reseta o resumo
+    atualizarResumo();
+    
+    console.log('✅ Carrinho limpo localmente');
 }
 
+// Função melhorada para limpar carrinho após pedido
 async function limparCarrinhoAposPedido(idUsuario) {
     try {
-        console.log('🔄 Limpando carrinho após pedido...');
+        console.log('🔄 Iniciando limpeza do carrinho...');
 
         // Tenta limpar no backend
-        const response = await fetch(`${API_BASE}/carrinho/limpar/${idUsuario}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
+        try {
+            const response = await fetch(`${API_BASE}/carrinho/limpar/${idUsuario}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
 
-        if (response.ok) {
-            console.log('✅ Carrinho limpo no backend');
-        } else {
-            console.log('⚠️ Erro ao limpar carrinho no backend, limpando localmente');
+            if (response.ok) {
+                console.log('✅ Carrinho limpo no backend');
+            } else {
+                console.log('⚠️ Não foi possível limpar carrinho no backend');
+            }
+        } catch (apiError) {
+            console.log('⚠️ Erro de conexão ao limpar carrinho no backend');
         }
 
-        // Sempre limpa localmente
+        // SEMPRE limpa localmente como fallback
         await limparCarrinhoLocal();
 
     } catch (err) {
-        console.error('❌ Erro ao limpar carrinho:', err);
+        console.error('❌ Erro na limpeza do carrinho:', err);
+        // Garante que limpa localmente mesmo com erro
         await limparCarrinhoLocal();
     }
 }
@@ -636,11 +666,13 @@ function processarPagamento() {
     btn.disabled = true;
 
     setTimeout(() => {
+        btn.textContent = textoOriginal;
+        btn.disabled = false;
         carregarPassoCheckout(2);
     }, 1500);
 }
 
-// Simular confirmação do pedido
+// Simular confirmação do pedido - FUNÇÃO CORRIGIDA
 async function simularConfirmacaoPedido() {
     const btn = event.target;
     const textoOriginal = btn.textContent;
@@ -650,7 +682,12 @@ async function simularConfirmacaoPedido() {
 
     try {
         const usuario = verificarLogin();
-        if (!usuario) return;
+        if (!usuario) {
+            console.error('❌ Usuário não logado');
+            return;
+        }
+
+        console.log('🔄 Iniciando processo de pedido...');
 
         // Tenta criar pedido na API
         const pedidoData = {
@@ -667,52 +704,78 @@ async function simularConfirmacaoPedido() {
             }))
         };
 
-        console.log('🔄 Criando pedido:', pedidoData);
+        console.log('📦 Dados do pedido:', pedidoData);
 
-        const response = await fetch(`${API_BASE}/pedidos`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(pedidoData)
-        });
+        let pedidoCriado = null;
+        
+        // Tenta criar pedido na API
+        try {
+            const response = await fetch(`${API_BASE}/pedidos`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(pedidoData)
+            });
 
-        if (response.ok) {
-            const pedidoCriado = await response.json();
-            console.log('✅ Pedido criado na API:', pedidoCriado);
-
-            // AGORA LIMPA O CARRINHO APÓS CRIAR O PEDIDO
-            await limparCarrinhoAposPedido(usuario.codUsuario);
-
-        } else {
-            console.log('⚠️ Erro na API, simulando pedido');
-            // Mesmo em caso de erro, limpa o carrinho localmente
-            await limparCarrinhoLocal();
+            if (response.ok) {
+                pedidoCriado = await response.json();
+                console.log('✅ Pedido criado na API:', pedidoCriado);
+            } else {
+                console.log('⚠️ Erro na API de pedidos, criando pedido localmente');
+                // Simula criação local do pedido
+                pedidoCriado = {
+                    codPedido: `GLW${Date.now().toString().slice(-6)}`,
+                    status: 'CONFIRMADO'
+                };
+            }
+        } catch (apiError) {
+            console.error('❌ Erro na API, criando pedido localmente:', apiError);
+            // Fallback: cria pedido localmente
+            pedidoCriado = {
+                codPedido: `GLW${Date.now().toString().slice(-6)}`,
+                status: 'CONFIRMADO'
+            };
         }
 
-        // Mostra sucesso após 2 segundos
+        // LIMPA O CARRINHO (agora de forma mais robusta)
+        console.log('🗑️ Limpando carrinho...');
+        await limparCarrinhoAposPedido(usuario.codUsuario);
+
+        // Atualiza a interface imediatamente
+        itensCarrinho = [];
+        mostrarCarrinhoVazio();
+        
+        console.log('✅ Processo de pedido concluído com sucesso');
+
+        // Mostra sucesso após pequeno delay
         setTimeout(() => {
             carregarPassoCheckout(3);
-        }, 2000);
+        }, 1500);
 
     } catch (err) {
-        console.error('Erro:', err);
-        // Em caso de erro, limpa localmente e mostra sucesso
-        await limparCarrinhoLocal();
+        console.error('❌ Erro crítico no processo de pedido:', err);
+        
+        // Mesmo em caso de erro, tenta limpar o carrinho
+        try {
+            await limparCarrinhoLocal();
+        } catch (cleanError) {
+            console.error('Erro ao limpar carrinho:', cleanError);
+        }
 
+        // Mostra sucesso mesmo com erro (para demo)
         setTimeout(() => {
             carregarPassoCheckout(3);
-        }, 2000);
+        }, 1500);
     }
-}
-
-
-// Finalizar processo
-function finalizarProcesso() {
-    fecharCheckout();
-    window.location.href = '../index.html';
 }
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function () {
+    // Verificar se estamos na página do carrinho
+    if (!isCarrinhoPage()) {
+        console.log('🚫 Script carrinho.js não executado - não estamos na página do carrinho');
+        return;
+    }
+
     // Verificar login
     if (!verificarERedirecionar()) {
         return;
@@ -764,4 +827,335 @@ function debugCarrinho() {
     console.log('Itens:', itensCarrinho);
     console.log('Usuário:', verificarLogin());
     console.log('Token:', localStorage.getItem('token'));
+}
+
+// Verificar se usuário tem endereços cadastrados
+async function verificarEnderecosUsuario(idUsuario) {
+    try {
+        const response = await fetch(`${API_BASE}/enderecos/usuario/${idUsuario}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            const enderecos = await response.json();
+            return enderecos;
+        } else {
+            return [];
+        }
+    } catch (error) {
+        console.error('Erro ao verificar endereços:', error);
+        return [];
+    }
+}
+
+// Mostrar modal para adicionar endereço
+function mostrarModalAdicionarEndereco() {
+    const modal = document.createElement('div');
+    modal.id = 'endereco-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        backdrop-filter: blur(5px);
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: var(--panel);
+            border: 1px solid var(--glass);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="color: var(--accent3); margin: 0;">📍 ADICIONAR ENDEREÇO DE ENTREGA</h3>
+                <button onclick="fecharModalEndereco()" style="
+                    background: none;
+                    border: none;
+                    color: var(--muted);
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    padding: 0.25rem;
+                ">×</button>
+            </div>
+
+            <p style="color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                Para finalizar sua compra, precisamos de um endereço de entrega válido.
+            </p>
+
+            <form id="endereco-form" style="display: grid; gap: 1rem;">
+                <div>
+                    <label for="cep" style="display: block; margin-bottom: 0.5rem; color: var(--accent3); font-family: 'Share Tech Mono', monospace;">CEP *</label>
+                    <input type="text" id="cep" placeholder="00000-000" style="
+                        width: 100%;
+                        padding: 0.75rem;
+                        border: 1px solid var(--muted);
+                        border-radius: var(--radius);
+                        background: var(--bg-2);
+                        color: white;
+                        font-family: 'Share Tech Mono', monospace;
+                    " required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div>
+                        <label for="rua" style="display: block; margin-bottom: 0.5rem; color: var(--accent3); font-family: 'Share Tech Mono', monospace;">RUA *</label>
+                        <input type="text" id="rua" placeholder="Nome da rua" style="
+                            width: 100%;
+                            padding: 0.75rem;
+                            border: 1px solid var(--muted);
+                            border-radius: var(--radius);
+                            background: var(--bg-2);
+                            color: white;
+                            font-family: 'Share Tech Mono', monospace;
+                        " required>
+                    </div>
+                    <div>
+                        <label for="numero" style="display: block; margin-bottom: 0.5rem; color: var(--accent3); font-family: 'Share Tech Mono', monospace;">NÚMERO *</label>
+                        <input type="text" id="numero" placeholder="123" style="
+                            width: 100%;
+                            padding: 0.75rem;
+                            border: 1px solid var(--muted);
+                            border-radius: var(--radius);
+                            background: var(--bg-2);
+                            color: white;
+                            font-family: 'Share Tech Mono', monospace;
+                        " required>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="complemento" style="display: block; margin-bottom: 0.5rem; color: var(--accent3); font-family: 'Share Tech Mono', monospace;">COMPLEMENTO</label>
+                    <input type="text" id="complemento" placeholder="Apto, bloco, etc. (opcional)" style="
+                        width: 100%;
+                        padding: 0.75rem;
+                        border: 1px solid var(--muted);
+                        border-radius: var(--radius);
+                        background: var(--bg-2);
+                        color: white;
+                        font-family: 'Share Tech Mono', monospace;
+                    ">
+                </div>
+
+                <div>
+                    <label for="bairro" style="display: block; margin-bottom: 0.5rem; color: var(--accent3); font-family: 'Share Tech Mono', monospace;">BAIRRO *</label>
+                    <input type="text" id="bairro" placeholder="Nome do bairro" style="
+                        width: 100%;
+                        padding: 0.75rem;
+                        border: 1px solid var(--muted);
+                        border-radius: var(--radius);
+                        background: var(--bg-2);
+                        color: white;
+                        font-family: 'Share Tech Mono', monospace;
+                    " required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                    <div>
+                        <label for="cidade" style="display: block; margin-bottom: 0.5rem; color: var(--accent3); font-family: 'Share Tech Mono', monospace;">CIDADE *</label>
+                        <input type="text" id="cidade" placeholder="Nome da cidade" style="
+                            width: 100%;
+                            padding: 0.75rem;
+                            border: 1px solid var(--muted);
+                            border-radius: var(--radius);
+                            background: var(--bg-2);
+                            color: white;
+                            font-family: 'Share Tech Mono', monospace;
+                        " required>
+                    </div>
+                    <div>
+                        <label for="estado" style="display: block; margin-bottom: 0.5rem; color: var(--accent3); font-family: 'Share Tech Mono', monospace;">ESTADO *</label>
+                        <select id="estado" style="
+                            width: 100%;
+                            padding: 0.75rem;
+                            border: 1px solid var(--muted);
+                            border-radius: var(--radius);
+                            background: var(--bg-2);
+                            color: white;
+                            font-family: 'Share Tech Mono', monospace;
+                        " required>
+                            <option value="">Selecione</option>
+                            <option value="AC">AC</option>
+                            <option value="AL">AL</option>
+                            <option value="AP">AP</option>
+                            <option value="AM">AM</option>
+                            <option value="BA">BA</option>
+                            <option value="CE">CE</option>
+                            <option value="DF">DF</option>
+                            <option value="ES">ES</option>
+                            <option value="GO">GO</option>
+                            <option value="MA">MA</option>
+                            <option value="MT">MT</option>
+                            <option value="MS">MS</option>
+                            <option value="MG">MG</option>
+                            <option value="PA">PA</option>
+                            <option value="PB">PB</option>
+                            <option value="PR">PR</option>
+                            <option value="PE">PE</option>
+                            <option value="PI">PI</option>
+                            <option value="RJ">RJ</option>
+                            <option value="RN">RN</option>
+                            <option value="RS">RS</option>
+                            <option value="RO">RO</option>
+                            <option value="RR">RR</option>
+                            <option value="SC">SC</option>
+                            <option value="SP">SP</option>
+                            <option value="SE">SE</option>
+                            <option value="TO">TO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="endereco-message" style="display: none; padding: 0.75rem; border-radius: var(--radius); text-align: center; font-family: 'Share Tech Mono', monospace;"></div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="button" onclick="fecharModalEndereco()" class="btn btn-secondary" style="flex: 1;">
+                        CANCELAR
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        SALVAR ENDEREÇO
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Configurar evento do formulário
+    const form = document.getElementById('endereco-form');
+    form.addEventListener('submit', salvarEndereco);
+
+    // Configurar busca de CEP
+    const cepInput = document.getElementById('cep');
+    cepInput.addEventListener('blur', buscarCep);
+}
+
+// Fechar modal de endereço
+function fecharModalEndereco() {
+    const modal = document.getElementById('endereco-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Buscar CEP via API
+async function buscarCep() {
+    const cep = document.getElementById('cep').value.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+
+    try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+
+        if (!data.erro) {
+            document.getElementById('rua').value = data.logradouro || '';
+            document.getElementById('bairro').value = data.bairro || '';
+            document.getElementById('cidade').value = data.localidade || '';
+            document.getElementById('estado').value = data.uf || '';
+            document.getElementById('numero').focus();
+        }
+    } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+    }
+}
+
+// Salvar endereço
+async function salvarEndereco(event) {
+    event.preventDefault();
+
+    const usuario = verificarLogin();
+    if (!usuario) return;
+
+    const formData = {
+        idUsuario: usuario.codUsuario,
+        cep: document.getElementById('cep').value,
+        rua: document.getElementById('rua').value,
+        numero: document.getElementById('numero').value,
+        complemento: document.getElementById('complemento').value,
+        bairro: document.getElementById('bairro').value,
+        cidade: document.getElementById('cidade').value,
+        estado: document.getElementById('estado').value
+    };
+
+    // Validação básica
+    if (!formData.cep || !formData.rua || !formData.numero || !formData.bairro || !formData.cidade || !formData.estado) {
+        mostrarMensagemEndereco('Preencha todos os campos obrigatórios', 'error');
+        return;
+    }
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const textoOriginal = submitBtn.textContent;
+    submitBtn.textContent = 'SALVANDO...';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE}/enderecos`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            const endereco = await response.json();
+            console.log('✅ Endereço salvo:', endereco);
+            mostrarMensagemEndereco('Endereço salvo com sucesso!', 'success');
+
+            // Fechar modal após 2 segundos e iniciar checkout
+            setTimeout(() => {
+                fecharModalEndereco();
+                document.getElementById('checkout-modal').style.display = 'flex';
+                carregarPassoCheckout(1);
+            }, 2000);
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Erro ao salvar endereço');
+        }
+    } catch (error) {
+        console.error('Erro ao salvar endereço:', error);
+        mostrarMensagemEndereco(error.message || 'Erro ao salvar endereço', 'error');
+        submitBtn.textContent = textoOriginal;
+        submitBtn.disabled = false;
+    }
+}
+
+// Mostrar mensagem no modal de endereço
+function mostrarMensagemEndereco(mensagem, tipo) {
+    const messageDiv = document.getElementById('endereco-message');
+    if (messageDiv) {
+        messageDiv.textContent = mensagem;
+        messageDiv.className = `endereco-message endereco-${tipo}`;
+        messageDiv.style.display = 'block';
+
+        if (tipo === 'success') {
+            messageDiv.style.background = 'rgba(0, 255, 136, 0.1)';
+            messageDiv.style.border = '1px solid var(--accent2)';
+            messageDiv.style.color = 'var(--accent2)';
+        } else {
+            messageDiv.style.background = 'rgba(255, 69, 149, 0.1)';
+            messageDiv.style.border = '1px solid var(--accent1)';
+            messageDiv.style.color = 'var(--accent1)';
+        }
+    }
+}
+
+// Função auxiliar para verificar e redirecionar
+function verificarERedirecionar() {
+    const usuario = verificarLogin();
+    if (!usuario) {
+        window.location.href = './html/login.html';
+        return false;
+    }
+    return true;
 }

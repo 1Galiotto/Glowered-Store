@@ -8,12 +8,12 @@ const login = async (req, res) => {
         const cliente = await Cliente.findOne({ where: { email: valores.email } })
 
         if (!cliente) {
-            return res.status(404).json({ error: "Usuário não encontrado" })
+            return res.status(404).json({ error: "Usuário não encontrado"})
         }
 
         const senhaValida = await comparePassword(valores.senha, cliente.senha)
         if (!senhaValida) {
-            return res.status(401).json({ error: "Senha inválida!" })
+            return res.status(401).json({ error: "Senha inválida!"})
         }
 
         const token = generateToken({ id: cliente.codUsuario, email: cliente.email })
@@ -31,7 +31,7 @@ const login = async (req, res) => {
         })
 
     } catch (err) {
-        res.status(500).json({ error: "Erro ao realizar o login!" })
+        res.status(500).json({ error: "Erro ao realizar o login!"})
         console.error("Erro ao realizar o login!", err)
     }
 }

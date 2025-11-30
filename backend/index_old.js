@@ -2,6 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const db = require('./db/conn.js')
+const app = express()
 
 require('./model/rel.js')
 
@@ -17,9 +18,20 @@ const carrinhoController = require('./controller/carrinho.controller.js')
 const cupomController = require('./controller/cupom.controller.js')
 const entregaController = require('./controller/entrega.controller.js')
 
-const app = express()
-const PORT = process.env.PORTC || 3000
-const hostname = 'localhost'
+// ------------------------- CONFIG SERVIDOR -------------------------
+const PORT = process.env.PORT || process.env.PORTC || 3001
+const HOST = process.env.HOST || '0.0.0.0'
+const isProduction = process.env.NODE_ENV === 'production'
+// ------------------------------------------------------------------
+
+// Debug de ambiente
+console.log('🔧 Configuração do Servidor:');
+console.log('- PORT:', PORT);
+console.log('- HOST:', HOST);
+console.log('- NODE_ENV:', process.env.NODE_ENV);
+console.log('- isProduction:', isProduction);
+
+// -------------------------- MIDDLEWARE -----------------------------
 
 // Middlewares
 app.use(cors())
@@ -133,12 +145,40 @@ app.get('/entregas/rastreamento/:codigo', entregaController.buscarPorRastreament
 app.put('/entregas/:id/status', entregaController.atualizarStatus) // Atualizar status da entrega
 
 // Iniciar o servidor após a conexão com o banco de dados
-db.sync()
-    .then(() => {
-        app.listen(PORT, hostname, () => {
-            console.log(`Servidor rodando em http://${hostname}:${PORT}`)
-        })
-    })
-    .catch((err) => {
-        console.error('Erro de conexão com o banco de dados!', err)
-    })
+async function startServer() {
+    try {
+        console.log('🟡 Iniciando servidor Glowered Store...');
+
+        // Teste simples de banco
+        await db.authenticate();
+        console.log('✅ Conexão com banco estabelecida');
+
+        // Iniciar servidor
+        app.listen(PORT, HOST, () => {
+            console.log('🎉 =================================');
+            console.log(`🚀 Servidor Glowered Store rodando!`);
+            console.log(`📍 URL: http://${HOST}:${PORT}`);
+            console.log(`⚡ Ambiente: ${isProduction ? 'PRODUÇÃO' : 'DESENVOLVIMENTO'}`);
+            console.log('🎉 =================================');
+        });
+
+    } catch (err) {
+        console.error('❌ ERRO ao iniciar servidor:', err.message);
+        process.exit(1);
+    }
+}
+
+// Tratamento de erros não capturados
+process.on('unhandledRejection', (err) => {
+    console.error('❌ Unhandled Promise Rejection:', err);
+    process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('❌ Uncaught Exception:', err);
+    process.exit(1);
+});
+
+// Iniciar servidor
+startServer();
+// ------------------------------------------------------------------
