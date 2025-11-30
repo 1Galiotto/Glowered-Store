@@ -309,17 +309,11 @@ cd frontend
 <strong>3️⃣ Configurar variáveis de ambiente</strong><br>
 Crie um arquivo <code>.env</code> na pasta backend:
 <pre># Banco de Dados
-DB_HOST=localhost
-DB_USER=root
-DB_PASS=sua_senha
-DB_NAME=glowered_store
-
+DATABASE_URL="mysql://DB_USER:DB_PASSWORD@metro.proxy.rlwy.net:51243/DB_NAME"
+    
 # Autenticação JWT
 JWT_SECRET=SUA_CHAVE_SECRETA_JWT_MUITO_SEGURA
-
-# Servidor
-PORTC=3000
-HOSTNAME=localhost</pre>
+</pre>
 
 <strong>4️⃣ Configurar o banco de dados</strong>
 <pre>CREATE DATABASE glowered_store;</pre>
